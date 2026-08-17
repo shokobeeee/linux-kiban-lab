@@ -12,6 +12,8 @@ on:
       - ui-learning.js
       - ui-generic.css
       - ui-generic.js
+      - ui-incident-modes.css
+      - ui-incident-modes.js
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -41,7 +43,7 @@ jobs:
           tar -xJf site.tar.xz -C _site
           test -f _site/index.html
 
-      - name: Apply generic Linux learning UI
+      - name: Apply Linux learning and incident UI
         run: |
           cp ui-compact.css _site/ui-compact.css
           cp ui-live-terminal.css _site/ui-live-terminal.css
@@ -50,6 +52,8 @@ jobs:
           cp ui-learning.js _site/ui-learning.js
           cp ui-generic.css _site/ui-generic.css
           cp ui-generic.js _site/ui-generic.js
+          cp ui-incident-modes.css _site/ui-incident-modes.css
+          cp ui-incident-modes.js _site/ui-incident-modes.js
           python - <<'PY'
           from pathlib import Path
           import re, json
@@ -80,23 +84,24 @@ jobs:
                   text = text.replace(old, new)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=11">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=11">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=11">'),
-                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=11">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=12">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=12">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=12">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=12">'),
+                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=12">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=11"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=12"', text)
 
-              scripts = ['ui-density.js','ui-learning.js','ui-generic.js']
+              scripts = ['ui-density.js','ui-learning.js','ui-generic.js','ui-incident-modes.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=11"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=12"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=11"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=12"', text)
 
               page.write_text(text, encoding='utf-8')
 
@@ -119,19 +124,21 @@ jobs:
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v11-command-scope', text)
-              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v11-command-scope', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v12-incident-modes', text)
+              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v12-incident-modes', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=11",'
-                  '\n  "./ui-live-terminal.css?v=11",'
-                  '\n  "./ui-learning.css?v=11",'
-                  '\n  "./ui-generic.css?v=11",'
-                  '\n  "./ui-density.js?v=11",'
-                  '\n  "./ui-learning.js?v=11",'
-                  '\n  "./ui-generic.js?v=11",'
+                  '\n  "./ui-compact.css?v=12",'
+                  '\n  "./ui-live-terminal.css?v=12",'
+                  '\n  "./ui-learning.css?v=12",'
+                  '\n  "./ui-generic.css?v=12",'
+                  '\n  "./ui-incident-modes.css?v=12",'
+                  '\n  "./ui-density.js?v=12",'
+                  '\n  "./ui-learning.js?v=12",'
+                  '\n  "./ui-generic.js?v=12",'
+                  '\n  "./ui-incident-modes.js?v=12",'
               )
-              if marker in text and './ui-generic.js?v=11' not in text:
+              if marker in text and './ui-incident-modes.js?v=12' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
@@ -139,28 +146,25 @@ jobs:
       - name: Verify patched site
         run: |
           grep -q 'Linux基盤ラボ' _site/index.html
-          grep -q 'ui-generic.css?v=11' _site/index.html
-          grep -q 'ui-generic.js?v=11' _site/index.html
-          grep -q 'ui-density.js?v=11' _site/index.html
+          grep -q 'ui-generic.js?v=12' _site/index.html
+          grep -q 'ui-incident-modes.css?v=12' _site/parrot_linux_lab12_scheduler.html
+          grep -q 'ui-incident-modes.js?v=12' _site/parrot_linux_lab12_scheduler.html
+          grep -q 'ui-incident-modes.js?v=12' _site/parrot_linux_lab20_capstone.html
+          grep -q "12:\[" _site/ui-incident-modes.js
+          grep -q "20:\[" _site/ui-incident-modes.js
+          grep -q 'Guided' _site/ui-incident-modes.js
+          grep -q 'Standard' _site/ui-incident-modes.js
+          grep -q 'Engineer' _site/ui-incident-modes.js
+          grep -q 'incident-mode-box' _site/ui-incident-modes.css
           grep -q 'mobile-live-command-scope' _site/ui-generic.js
-          grep -q 'Linux / Unixで広く利用' _site/ui-generic.js
-          grep -q 'nginx固有' _site/ui-generic.js
           grep -q 'server01.lab.test' _site/ui-learning.js
           ! grep -q 'parrot.local' _site/ui-learning.js
-          grep -q 'genericizeTree' _site/ui-generic.js
-          grep -q 'syncSliderHeight' _site/ui-density.js
-          grep -q 'var LABS=' _site/ui-learning.js
           grep -q '"name": "Linux基盤ラボ"' _site/manifest.webmanifest
           ! grep -R -Eq 'Parrot OS|parrot\.local|learner@parrot|root@parrot' _site/*.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
-          ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab11_bash_pipes.html
-          test -f _site/ui-compact.css
-          test -f _site/ui-live-terminal.css
-          test -f _site/ui-density.js
-          test -f _site/ui-learning.css
-          test -f _site/ui-learning.js
-          test -f _site/ui-generic.css
-          test -f _site/ui-generic.js
+          ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab20_capstone.html
+          test -f _site/ui-incident-modes.css
+          test -f _site/ui-incident-modes.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
