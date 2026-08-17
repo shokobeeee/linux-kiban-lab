@@ -3,7 +3,7 @@
   var mq=window.matchMedia('(max-width: 820px)');
   if(!mq.matches) return;
 
-  document.body.classList.add('mobile-v5');
+  document.body.classList.add('mobile-v6');
 
   document.querySelectorAll('.flow,.trace-line,.port-map,.packet-path').forEach(function(el){
     el.classList.add('mobile-structure-scroller');
@@ -25,18 +25,19 @@
 
   var slides=Array.prototype.slice.call(container.children).filter(function(el){return el.nodeType===1;}).slice(0,3);
   if(slides.length<3) return;
+
   container.classList.add('mobile-operation-slider');
   slides.forEach(function(el,i){el.classList.add('mobile-slide','mobile-slide-'+i);});
 
   var desc=opHeading.nextElementSibling;
   if(desc && desc.tagName==='P'){
-    desc.textContent='操作を選ぶ →「結果」「Linux」で変化を確認。下のタブ、または横スワイプで切り替えます。';
+    desc.textContent='操作を選ぶと、同じ画面のLIVE Terminalが即時更新されます。「結果」「Linux詳細」はタブまたは横スワイプで確認できます。';
   }
 
   var tabs=document.createElement('div');
   tabs.className='mobile-slider-tabs';
   tabs.setAttribute('role','tablist');
-  var labels=['① 操作','② 結果','③ Linux'];
+  var labels=['① 操作＋Terminal','② 結果','③ Linux詳細'];
   var buttons=labels.map(function(label,i){
     var b=document.createElement('button');
     b.type='button';
@@ -51,9 +52,10 @@
     tabs.appendChild(b);
     return b;
   });
+
   var help=document.createElement('div');
   help.className='mobile-slider-help';
-  help.textContent='← 横にスワイプでも切替 →';
+  help.textContent='← 横スワイプでも切替 →';
   container.parentNode.insertBefore(tabs,container);
   container.parentNode.insertBefore(help,container);
 
@@ -64,6 +66,7 @@
       b.setAttribute('aria-selected',on?'true':'false');
     });
   }
+
   var ticking=false;
   container.addEventListener('scroll',function(){
     if(ticking)return;
@@ -78,4 +81,77 @@
       ticking=false;
     });
   },{passive:true});
+
+  var operationSlide=slides[0];
+  var linuxSlide=slides[2];
+  var originalTerminal=linuxSlide.querySelector('.terminal') || linuxSlide.querySelector('pre') || linuxSlide.querySelector('.mini-console');
+
+  if(operationSlide && originalTerminal){
+    var existingChildren=Array.prototype.slice.call(operationSlide.childNodes);
+    var controlScroll=document.createElement('div');
+    controlScroll.className='mobile-control-scroll';
+    existingChildren.forEach(function(node){controlScroll.appendChild(node);});
+    operationSlide.appendChild(controlScroll);
+
+    var live=document.createElement('section');
+    live.className='mobile-live-terminal';
+    live.setAttribute('aria-label','操作に連動するLinux Terminal');
+
+    var liveHead=document.createElement('div');
+    liveHead.className='mobile-live-terminal-head';
+
+    var title=document.createElement('strong');
+    title.textContent='🖥 LIVE Terminal';
+    liveHead.appendChild(title);
+
+    var actions=document.createElement('div');
+    actions.className='mobile-live-terminal-actions';
+
+    var detail=document.createElement('button');
+    detail.type='button';
+    detail.textContent='詳細';
+    detail.title='Linux詳細スライドを開く';
+    detail.addEventListener('click',function(){
+      container.scrollTo({left:slides[2].offsetLeft,behavior:'smooth'});
+      setActive(2);
+    });
+
+    var resize=document.createElement('button');
+    resize.type='button';
+    resize.textContent='拡大';
+    resize.setAttribute('aria-expanded','false');
+    resize.addEventListener('click',function(){
+      var expanded=live.classList.toggle('expanded');
+      resize.textContent=expanded?'縮小':'拡大';
+      resize.setAttribute('aria-expanded',expanded?'true':'false');
+    });
+
+    actions.appendChild(detail);
+    actions.appendChild(resize);
+    liveHead.appendChild(actions);
+
+    var liveBody=document.createElement('div');
+    liveBody.className='mobile-live-terminal-body';
+
+    live.appendChild(liveHead);
+    live.appendChild(liveBody);
+    operationSlide.appendChild(live);
+
+    function syncTerminal(){
+      liveBody.innerHTML=originalTerminal.innerHTML;
+      if(!liveBody.textContent.trim()) liveBody.textContent='$';
+      liveBody.scrollTop=liveBody.scrollHeight;
+    }
+    syncTerminal();
+
+    var observer=new MutationObserver(syncTerminal);
+    observer.observe(originalTerminal,{subtree:true,childList:true,characterData:true,attributes:true});
+
+    operationSlide.addEventListener('click',function(e){
+      if(e.target.closest('button')){
+        setTimeout(syncTerminal,0);
+        setTimeout(syncTerminal,80);
+      }
+    });
+  }
 })();
