@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - site.tar.xz
+      - ui-compact.css
+      - ui-density.js
+      - .github/workflows/pages.yml
   workflow_dispatch:
 
 permissions:
@@ -28,9 +31,44 @@ jobs:
 
       - name: Extract static site
         run: |
+          rm -rf _site
           mkdir -p _site
           tar -xJf site.tar.xz -C _site
           test -f _site/index.html
+
+      - name: Apply compact mobile UI
+        run: |
+          cp ui-compact.css _site/ui-compact.css
+          cp ui-density.js _site/ui-density.js
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('_site')
+          for page in root.glob('*.html'):
+              text = page.read_text(encoding='utf-8')
+              if 'ui-compact.css' not in text:
+                  text = text.replace('</head>', '  <link rel="stylesheet" href="./ui-compact.css">\n</head>', 1)
+              if 'ui-density.js' not in text:
+                  text = text.replace('</body>', '  <script src="./ui-density.js"></script>\n</body>', 1)
+              page.write_text(text, encoding='utf-8')
+
+          # Force clients off the previous cache and include the new UI assets.
+          sw = root / 'sw.js'
+          if sw.exists():
+              text = sw.read_text(encoding='utf-8')
+              text = text.replace('parrot-linux-labs-v1', 'parrot-linux-labs-v3-compact')
+              marker = 'const ASSETS = ['
+              if marker in text and './ui-compact.css' not in text:
+                  text = text.replace(marker, marker + '\n  "./ui-compact.css",\n  "./ui-density.js",', 1)
+              sw.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify patched site
+        run: |
+          grep -q 'ui-compact.css' _site/index.html
+          grep -q 'ui-density.js' _site/index.html
+          test -f _site/ui-compact.css
+          test -f _site/ui-density.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
