@@ -59,7 +59,6 @@ jobs:
               text = page.read_text(encoding='utf-8')
               text = re.sub(r'\bzoom\s*:\s*(?:0?\.8|80%)\s*;?', '', text)
 
-              # Genericize the teaching environment without changing legacy filenames/links.
               replacements = [
                   ('Parrot OS Linux基盤ラボ', 'Linux基盤ラボ'),
                   ('Parrot OS Linux 基盤ラボ', 'Linux基盤ラボ'),
@@ -74,30 +73,30 @@ jobs:
                   ('learner@parrot', 'learner@server01'),
                   ('root@parrot', 'root@server01'),
                   (' / parrot', ' / server01'),
-                  ('Parrot OS', 'Linux'),
-                  ('Parrot', 'Linux'),
+                  ('Parrot OS', 'Linux Host'),
+                  ('Parrot', 'Linux Host'),
               ]
               for old, new in replacements:
                   text = text.replace(old, new)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=9">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=9">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=9">'),
-                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=9">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=10">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=10">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=10">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=10">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=9"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=10"', text)
 
               scripts = ['ui-density.js','ui-learning.js','ui-generic.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=9"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=10"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=9"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=10"', text)
 
               page.write_text(text, encoding='utf-8')
 
@@ -112,18 +111,19 @@ jobs:
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v9-generic', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v10-layout-fix', text)
+              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v10-layout-fix', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=9",'
-                  '\n  "./ui-live-terminal.css?v=9",'
-                  '\n  "./ui-learning.css?v=9",'
-                  '\n  "./ui-generic.css?v=9",'
-                  '\n  "./ui-density.js?v=9",'
-                  '\n  "./ui-learning.js?v=9",'
-                  '\n  "./ui-generic.js?v=9",'
+                  '\n  "./ui-compact.css?v=10",'
+                  '\n  "./ui-live-terminal.css?v=10",'
+                  '\n  "./ui-learning.css?v=10",'
+                  '\n  "./ui-generic.css?v=10",'
+                  '\n  "./ui-density.js?v=10",'
+                  '\n  "./ui-learning.js?v=10",'
+                  '\n  "./ui-generic.js?v=10",'
               )
-              if marker in text and './ui-generic.js?v=9' not in text:
+              if marker in text and './ui-generic.js?v=10' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
@@ -131,8 +131,13 @@ jobs:
       - name: Verify patched site
         run: |
           grep -q 'Linux基盤ラボ' _site/index.html
-          grep -q 'ui-generic.css?v=9' _site/index.html
-          grep -q 'ui-generic.js?v=9' _site/index.html
+          grep -q 'ui-generic.css?v=10' _site/index.html
+          grep -q 'ui-generic.js?v=10' _site/index.html
+          grep -q 'ui-density.js?v=10' _site/index.html
+          grep -q 'genericizeTree' _site/ui-generic.js
+          grep -q 'syncSliderHeight' _site/ui-density.js
+          grep -q 'overflow-y:hidden' _site/ui-live-terminal.css
+          grep -q 'min-height:0' _site/ui-live-terminal.css
           grep -q 'var LABS=' _site/ui-learning.js
           grep -q 'linux-scope-legend' _site/ui-generic.js
           grep -q 'Debian / Ubuntu' _site/ui-generic.js

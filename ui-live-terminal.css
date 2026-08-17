@@ -1,4 +1,4 @@
-/* Mobile v6: live terminal inside the operation slide */
+/* Mobile v10: live terminal inside the operation slide, active-slide height only */
 @media(max-width:820px){
   .mobile-operation-slider > .mobile-slide-0{
     display:flex!important;
@@ -8,6 +8,10 @@
     background:transparent!important;
     border:0!important;
     overflow:visible!important;
+    min-height:0!important;
+    max-height:none!important;
+    height:auto!important;
+    align-self:flex-start!important;
   }
 
   .mobile-slide-0 > .mobile-control-scroll{
@@ -27,10 +31,7 @@
     -webkit-overflow-scrolling:touch;
   }
 
-  .mobile-slide-0 > .mobile-control-scroll > .panel-title{
-    grid-column:1/-1!important;
-  }
-
+  .mobile-slide-0 > .mobile-control-scroll > .panel-title{grid-column:1/-1!important}
   .mobile-slide-0 > .mobile-control-scroll button{
     width:100%!important;
     min-height:42px!important;
@@ -65,12 +66,7 @@
     font-size:11.5px!important;
   }
 
-  .mobile-live-terminal-actions{
-    display:flex!important;
-    align-items:center!important;
-    gap:5px!important;
-  }
-
+  .mobile-live-terminal-actions{display:flex!important;align-items:center!important;gap:5px!important}
   .mobile-live-terminal-actions button{
     width:auto!important;
     min-width:48px!important;
@@ -105,38 +101,25 @@
   }
 
   .mobile-operation-slider{
-    align-items:stretch!important;
+    align-items:flex-start!important;
+    overflow-y:hidden!important;
+    transition:height .18s ease!important;
   }
 
-  .mobile-operation-slider > .mobile-slide-0{
-    min-height:calc(100dvh - 205px)!important;
-    max-height:calc(100dvh - 150px)!important;
+  .mobile-operation-slider > .mobile-slide{
+    align-self:flex-start!important;
+    min-height:0!important;
+    height:auto!important;
   }
 
   .mobile-operation-slider > .mobile-slide-1,
-  .mobile-operation-slider > .mobile-slide-2{
-    align-self:flex-start!important;
-  }
-
-  .mobile-slider-tabs button:first-child{
-    font-size:10.5px!important;
-  }
+  .mobile-operation-slider > .mobile-slide-2{align-self:flex-start!important}
+  .mobile-slider-tabs button:first-child{font-size:10.5px!important}
 }
 
 @media(max-width:430px){
-  .mobile-slide-0 > .mobile-control-scroll{
-    grid-template-columns:1fr 1fr!important;
-    max-height:43dvh!important;
-  }
-  .mobile-live-terminal-body{
-    height:116px!important;
-    min-height:116px!important;
-    max-height:116px!important;
-  }
+  .mobile-slide-0 > .mobile-control-scroll{grid-template-columns:1fr 1fr!important;max-height:43dvh!important}
+  .mobile-live-terminal-body{height:116px!important;min-height:116px!important;max-height:116px!important}
 }
 
-@media(max-width:360px){
-  .mobile-slide-0 > .mobile-control-scroll{
-    grid-template-columns:1fr!important;
-  }
-}
+@media(max-width:360px){.mobile-slide-0 > .mobile-control-scroll{grid-template-columns:1fr!important}}
