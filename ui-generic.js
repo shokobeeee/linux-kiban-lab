@@ -27,7 +27,6 @@ function genericizeTree(root){
     return;
   }
   if(root.nodeType!==1 && root.nodeType!==9)return;
-
   if(root.nodeType===1){
     ['title','aria-label','placeholder'].forEach(function(a){
       if(root.hasAttribute && root.hasAttribute(a)){
@@ -36,16 +35,13 @@ function genericizeTree(root){
       }
     });
   }
-
-  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-  var n;
+  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),n;
   while((n=walker.nextNode())){
     var parent=n.parentElement;
     if(parent && /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(parent.tagName))continue;
     var t=genericizeText(n.nodeValue);
     if(t!==n.nodeValue)n.nodeValue=t;
   }
-
   if(root.querySelectorAll){
     root.querySelectorAll('[title],[aria-label],[placeholder]').forEach(function(el){
       ['title','aria-label','placeholder'].forEach(function(a){
@@ -57,28 +53,87 @@ function genericizeTree(root){
   }
 }
 
-function scope(cmd){
-  var s=(cmd||'').toLowerCase();
-  if(/\b(apt|apt-get|apt-key|dpkg|ufw)\b/.test(s))return{c:'debian',l:'🟠 Debian / Ubuntu系'};
-  if(/\b(systemctl|journalctl|systemd-analyze|loginctl)\b/.test(s))return{c:'systemd',l:'⚙ systemd系'};
-  if(/\b(grub-reboot|update-grub|grub-install|firewall-cmd|nft|podman|docker|ansible)\b/.test(s))return{c:'special',l:'🟣 ツール / 環境依存'};
-  return{c:'common',l:'🟢 Linuxで広く共通'};
+function scopeOne(cmd){
+  var s=String(cmd||'').trim().replace(/^\$\s*/,'').replace(/^sudo\s+/,'').toLowerCase();
+  var first=(s.match(/^([a-z0-9_.+\/-]+)/)||[])[1]||'';
+  if(/^(apt|apt-get|apt-key|dpkg|ufw)$/.test(first))return{c:'debian',l:'🟠 Debian / Ubuntu系',d:'パッケージ管理やufwなど、Debian系で使う代表コマンド'};
+  if(/^(systemctl|journalctl|systemd-analyze|loginctl)$/.test(first))return{c:'systemd',l:'⚙ systemd系',d:'systemdを採用するLinuxで使うサービス・ログ管理コマンド'};
+  if(first==='nginx')return{c:'nginx',l:'🟣 nginx固有',d:'Webサーバーnginx自身が提供するコマンド'};
+  if(/^(grub-reboot|update-grub|grub-install|firewall-cmd|nft|podman|docker|ansible|ansible-playbook)$/.test(first))return{c:'special',l:'🟣 ツール / 環境依存',d:'導入ツールやディストリビューション構成によって変わるコマンド'};
+  return{c:'common',l:'🟢 Linux / Unixで広く利用',d:'多くのLinux環境で同じ考え方・書式を使いやすいコマンド'};
+}
+
+function scopeParts(cmd){
+  var parts=String(cmd||'').split(/\s*(?:;|&&|\|\|)\s*/).filter(Boolean);
+  if(!parts.length)parts=[cmd];
+  var seen={},out=[];
+  parts.forEach(function(p){var x=scopeOne(p);if(!seen[x.c]){seen[x.c]=1;out.push(x);}});
+  return out;
+}
+
+function scopeBadge(x){
+  return '<span class="linux-scope-chip '+x.c+'" title="'+x.d.replace(/"/g,'&quot;')+'">'+x.l+'</span>';
 }
 
 function addLegend(){
   var mode=document.querySelector('.mobile-learning-mode');
   if(!mode||document.querySelector('.linux-scope-legend'))return;
   var d=document.createElement('div');d.className='linux-scope-legend';
-  d.innerHTML='<strong>コマンドの適用範囲</strong><span class="linux-scope-chip common">🟢 広く共通</span><span class="linux-scope-chip systemd">⚙ systemd系</span><span class="linux-scope-chip debian">🟠 Debian / Ubuntu系</span><span>概念はLinux共通でも、実コマンドは環境で変わることがあります。</span>';
+  d.innerHTML='<strong>コマンドの適用範囲</strong><span class="linux-scope-chip common">🟢 広く利用</span><span class="linux-scope-chip systemd">⚙ systemd系</span><span class="linux-scope-chip debian">🟠 Debian / Ubuntu系</span><span class="linux-scope-chip nginx">🟣 nginx固有</span><span>実行するとLIVE Terminal直上にも表示します。</span>';
   mode.insertAdjacentElement('afterend',d);
 }
 
 function tagCommands(root){
   (root||document).querySelectorAll('.mobile-command-choices code:not([data-scope-tagged])').forEach(function(code){
     code.dataset.scopeTagged='1';
-    var x=scope(code.textContent),b=document.createElement('span');b.className='command-scope-badge '+x.c;b.textContent=x.l;
-    code.parentElement.appendChild(b);
+    var wrap=document.createElement('span');wrap.className='command-scope-badges';
+    scopeParts(code.textContent).forEach(function(x){
+      var b=document.createElement('span');b.className='command-scope-badge '+x.c;b.textContent=x.l;b.title=x.d;wrap.appendChild(b);
+    });
+    code.parentElement.appendChild(wrap);
   });
+}
+
+function latestCommand(text){
+  var lines=String(text||'').split(/\r?\n/);
+  for(var i=lines.length-1;i>=0;i--){
+    var line=lines[i].trim();
+    var m=line.match(/^\$\s+(.+)$/);
+    if(m&&m[1].trim())return m[1].trim();
+    m=line.match(/(?:^|\s)[#$]\s+(.+)$/);
+    if(m&&m[1].trim())return m[1].trim();
+  }
+  return '';
+}
+
+function ensureLiveScope(){
+  var live=document.querySelector('.mobile-live-terminal');
+  if(!live)return null;
+  var bar=live.querySelector('.mobile-live-command-scope');
+  if(bar)return bar;
+  bar=document.createElement('div');
+  bar.className='mobile-live-command-scope';
+  bar.dataset.command='__init__';
+  var head=live.querySelector('.mobile-live-terminal-head');
+  if(head)head.insertAdjacentElement('afterend',bar);else live.insertBefore(bar,live.firstChild);
+  return bar;
+}
+
+function updateLiveScope(){
+  var live=document.querySelector('.mobile-live-terminal');
+  var body=live&&live.querySelector('.mobile-live-terminal-body');
+  var bar=ensureLiveScope();
+  if(!body||!bar)return;
+  var cmd=genericizeText(latestCommand(body.textContent));
+  if(bar.dataset.command===cmd)return;
+  bar.dataset.command=cmd;
+  if(!cmd){
+    bar.innerHTML='<span class="mobile-live-command-scope-label">適用範囲</span><span class="mobile-live-command-scope-empty">コマンド実行後にここへ表示</span>';
+    return;
+  }
+  var chips=scopeParts(cmd).map(scopeBadge).join('');
+  var safe=cmd.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  bar.innerHTML='<div class="mobile-live-command-scope-top"><span class="mobile-live-command-scope-label">このコマンドは</span>'+chips+'</div><code>$ '+safe+'</code>';
 }
 
 function addHomeNote(){
@@ -92,21 +147,16 @@ function addHomeNote(){
 
 function applyAll(root){
   genericizeTree(root||document);
-  addLegend();
-  tagCommands(root||document);
-  addHomeNote();
-  var dt=genericizeText(document.title);
-  if(dt!==document.title)document.title=dt;
+  addLegend();tagCommands(root||document);ensureLiveScope();updateLiveScope();addHomeNote();
+  var dt=genericizeText(document.title);if(dt!==document.title)document.title=dt;
 }
 
 applyAll(document);
-
 new MutationObserver(function(ms){
   ms.forEach(function(m){
-    m.addedNodes.forEach(function(n){
-      if(n.nodeType===1||n.nodeType===3)applyAll(n.nodeType===1?n:n.parentElement);
-    });
+    m.addedNodes.forEach(function(n){if(n.nodeType===1||n.nodeType===3)applyAll(n.nodeType===1?n:n.parentElement);});
     if(m.type==='characterData')genericizeTree(m.target);
   });
+  updateLiveScope();
 }).observe(document.body,{subtree:true,childList:true,characterData:true});
 })();
