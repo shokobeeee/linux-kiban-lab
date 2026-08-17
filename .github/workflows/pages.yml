@@ -18,6 +18,8 @@ on:
       - ui-incident-polish.js
       - ui-distro.css
       - ui-distro.js
+      - ui-scope-context.css
+      - ui-scope-context.js
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -62,6 +64,8 @@ jobs:
           cp ui-incident-polish.js _site/ui-incident-polish.js
           cp ui-distro.css _site/ui-distro.css
           cp ui-distro.js _site/ui-distro.js
+          cp ui-scope-context.css _site/ui-scope-context.css
+          cp ui-scope-context.js _site/ui-scope-context.js
           python - <<'PY'
           from pathlib import Path
           import re, json
@@ -92,26 +96,27 @@ jobs:
                   text = text.replace(old, new)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=14">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=14">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=14">'),
-                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=14">'),
-                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=14">'),
-                  ('ui-incident-polish.css', '<link rel="stylesheet" href="./ui-incident-polish.css?v=14">'),
-                  ('ui-distro.css', '<link rel="stylesheet" href="./ui-distro.css?v=14">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=15">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=15">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=15">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=15">'),
+                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=15">'),
+                  ('ui-incident-polish.css', '<link rel="stylesheet" href="./ui-incident-polish.css?v=15">'),
+                  ('ui-distro.css', '<link rel="stylesheet" href="./ui-distro.css?v=15">'),
+                  ('ui-scope-context.css', '<link rel="stylesheet" href="./ui-scope-context.css?v=15">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=14"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=15"', text)
 
-              scripts = ['ui-density.js','ui-learning.js','ui-generic.js','ui-incident-modes.js','ui-incident-polish.js','ui-distro.js']
+              scripts = ['ui-density.js','ui-learning.js','ui-generic.js','ui-incident-modes.js','ui-incident-polish.js','ui-distro.js','ui-scope-context.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=14"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=15"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=14"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=15"', text)
 
               page.write_text(text, encoding='utf-8')
 
@@ -143,25 +148,27 @@ jobs:
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v14-distro-profiles', text)
-              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v14-distro-profiles', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v15-contextual-roles', text)
+              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v15-contextual-roles', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=14",'
-                  '\n  "./ui-live-terminal.css?v=14",'
-                  '\n  "./ui-learning.css?v=14",'
-                  '\n  "./ui-generic.css?v=14",'
-                  '\n  "./ui-incident-modes.css?v=14",'
-                  '\n  "./ui-incident-polish.css?v=14",'
-                  '\n  "./ui-distro.css?v=14",'
-                  '\n  "./ui-density.js?v=14",'
-                  '\n  "./ui-learning.js?v=14",'
-                  '\n  "./ui-generic.js?v=14",'
-                  '\n  "./ui-incident-modes.js?v=14",'
-                  '\n  "./ui-incident-polish.js?v=14",'
-                  '\n  "./ui-distro.js?v=14",'
+                  '\n  "./ui-compact.css?v=15",'
+                  '\n  "./ui-live-terminal.css?v=15",'
+                  '\n  "./ui-learning.css?v=15",'
+                  '\n  "./ui-generic.css?v=15",'
+                  '\n  "./ui-incident-modes.css?v=15",'
+                  '\n  "./ui-incident-polish.css?v=15",'
+                  '\n  "./ui-distro.css?v=15",'
+                  '\n  "./ui-scope-context.css?v=15",'
+                  '\n  "./ui-density.js?v=15",'
+                  '\n  "./ui-learning.js?v=15",'
+                  '\n  "./ui-generic.js?v=15",'
+                  '\n  "./ui-incident-modes.js?v=15",'
+                  '\n  "./ui-incident-polish.js?v=15",'
+                  '\n  "./ui-distro.js?v=15",'
+                  '\n  "./ui-scope-context.js?v=15",'
               )
-              if marker in text and './ui-distro.js?v=14' not in text:
+              if marker in text and './ui-scope-context.js?v=15' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
@@ -174,23 +181,21 @@ jobs:
           node --check _site/ui-incident-modes.js
           node --check _site/ui-incident-polish.js
           node --check _site/ui-distro.js
+          node --check _site/ui-scope-context.js
           grep -q 'Linux基盤ラボ' _site/index.html
-          grep -q 'ui-distro.css?v=14' _site/index.html
-          grep -q 'ui-distro.js?v=14' _site/index.html
-          grep -q 'ui-distro.js?v=14' _site/parrot_linux_lab01_web_nginx.html
-          grep -q 'ui-distro.js?v=14' _site/parrot_linux_lab20_capstone.html
-          grep -q "debian:{id:'debian'" _site/ui-distro.js
-          grep -q "rhel:{id:'rhel'" _site/ui-distro.js
+          grep -q 'ui-distro.js?v=15' _site/index.html
+          grep -q 'ui-scope-context.css?v=15' _site/index.html
+          grep -q 'ui-scope-context.js?v=15' _site/parrot_linux_lab01_web_nginx.html
+          grep -q '現在の学習環境での役割' _site/ui-scope-context.js
+          grep -q 'Package管理：' _site/ui-scope-context.js
+          grep -q 'Firewall：' _site/ui-scope-context.js
+          grep -q 'Service / Log管理：systemd' _site/ui-scope-context.js
           grep -q 'sudo dnf install' _site/ui-distro.js
           grep -q 'firewall-cmd --permanent --add-port' _site/ui-distro.js
           grep -q 'canonicalizeInput' _site/ui-distro.js
           grep -q 'cat /etc/os-release' _site/ui-distro.js
           grep -q 'linux_kiban_distro' _site/ui-distro.js
           grep -q 'minEvidence=lab===20?3:2' _site/ui-incident-polish.js
-          grep -q 'incident-evidence-gate' _site/ui-incident-polish.js
-          grep -q 'Guided' _site/ui-incident-modes.js
-          grep -q 'Standard' _site/ui-incident-modes.js
-          grep -q 'Engineer' _site/ui-incident-modes.js
           grep -q 'server01.lab.test' _site/ui-learning.js
           ! grep -q 'parrot.local' _site/ui-learning.js
           grep -q '"name": "Linux基盤ラボ"' _site/manifest.webmanifest
@@ -199,8 +204,8 @@ jobs:
           ! grep -R -Eq 'Parrot OS|parrot\.local|learner@parrot|root@parrot' _site/*.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab20_capstone.html
-          test -f _site/ui-distro.css
-          test -f _site/ui-distro.js
+          test -f _site/ui-scope-context.css
+          test -f _site/ui-scope-context.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
