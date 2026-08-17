@@ -56,55 +56,58 @@ jobs:
               text = re.sub(r'\bzoom\s*:\s*(?:0?\.8|80%)\s*;?', '', text)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=7">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=7">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=7">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=8">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=8">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=8">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=7"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=8"', text)
 
               scripts = ['ui-density.js','ui-learning.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=7"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=8"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=7"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=8"', text)
 
               page.write_text(text, encoding='utf-8')
 
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'parrot-linux-labs-v7-learning-modes', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'parrot-linux-labs-v8-learning-rollout', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=7",'
-                  '\n  "./ui-live-terminal.css?v=7",'
-                  '\n  "./ui-learning.css?v=7",'
-                  '\n  "./ui-density.js?v=7",'
-                  '\n  "./ui-learning.js?v=7",'
+                  '\n  "./ui-compact.css?v=8",'
+                  '\n  "./ui-live-terminal.css?v=8",'
+                  '\n  "./ui-learning.css?v=8",'
+                  '\n  "./ui-density.js?v=8",'
+                  '\n  "./ui-learning.js?v=8",'
               )
-              if marker in text and './ui-learning.js?v=7' not in text:
+              if marker in text and './ui-learning.js?v=8' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
 
       - name: Verify patched site
         run: |
-          grep -q 'ui-compact.css?v=7' _site/index.html
-          grep -q 'ui-live-terminal.css?v=7' _site/index.html
-          grep -q 'ui-learning.css?v=7' _site/index.html
-          grep -q 'ui-density.js?v=7' _site/index.html
-          grep -q 'ui-learning.js?v=7' _site/index.html
+          grep -q 'ui-compact.css?v=8' _site/index.html
+          grep -q 'ui-live-terminal.css?v=8' _site/index.html
+          grep -q 'ui-learning.css?v=8' _site/index.html
+          grep -q 'ui-density.js?v=8' _site/index.html
+          grep -q 'ui-learning.js?v=8' _site/index.html
           grep -q 'mobile-live-terminal' _site/ui-density.js
           grep -q 'mobile-operation-slider' _site/ui-density.js
-          grep -q 'mobile-learning-mode' _site/ui-learning.js
-          grep -q 'mobile-learning-mode-buttons' _site/ui-learning.css
+          grep -q 'var LABS=' _site/ui-learning.js
+          grep -q 'allow80:E' _site/ui-learning.js
+          grep -q 'psgrep:E' _site/ui-learning.js
+          grep -q 'protocol-legend' _site/ui-learning.js
+          grep -q 'protocol-legend-grid' _site/ui-learning.css
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
-          ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab02_firewall_complete.html
+          ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab11_bash_pipes.html
           test -f _site/ui-compact.css
           test -f _site/ui-live-terminal.css
           test -f _site/ui-density.js
