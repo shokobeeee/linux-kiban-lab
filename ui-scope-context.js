@@ -12,12 +12,12 @@ function classifyOne(cmd){
   if(first==='nginx')return{c:'tool',l:'🟣 nginx固有'};
   if(/^(docker|podman)$/.test(first))return{c:'tool',l:'🟣 Container：'+first};
   if(/^(ansible|ansible-playbook|ansible-inventory)$/.test(first))return{c:'tool',l:'🟣 Ansible固有'};
-  if(/^(openssl)$/.test(first))return{c:'tool',l:'🟣 TLSツール：OpenSSL'};
-  if(/^(promtool)$/.test(first))return{c:'tool',l:'🟣 Prometheusツール'};
-  if(/^(aws)$/.test(first))return{c:'tool',l:'🟣 Cloud Provider：AWS CLI'};
-  if(/^(virsh)$/.test(first))return{c:'tool',l:'🟣 Virtualization：libvirt'};
-  if(/^(cloud-init)$/.test(first))return{c:'tool',l:'🟣 Provisioning：cloud-init'};
-  if(/^(ausearch)$/.test(first))return{c:'tool',l:'🟣 Audit：auditd'};
+  if(first==='openssl')return{c:'tool',l:'🟣 TLSツール：OpenSSL'};
+  if(first==='promtool')return{c:'tool',l:'🟣 Prometheusツール'};
+  if(first==='aws')return{c:'tool',l:'🟣 Cloud Provider：AWS CLI'};
+  if(first==='virsh')return{c:'tool',l:'🟣 Virtualization：libvirt'};
+  if(first==='cloud-init')return{c:'tool',l:'🟣 Provisioning：cloud-init'};
+  if(first==='ausearch')return{c:'tool',l:'🟣 Audit：auditd'};
   return{c:'common',l:'🟢 Linuxで広く共通'};
 }
 function classify(cmd){
@@ -28,7 +28,8 @@ function classify(cmd){
 function chips(cmd){return classify(cmd).map(function(x){return'<span class="context-scope-chip '+x.c+'">'+esc(x.l)+'</span>'}).join('')}
 function rewriteLegend(){
   var el=document.querySelector('.linux-scope-legend');if(!el)return;var p=profile();
-  el.classList.add('contextualized');
+  if(el.dataset.contextProfile===p.id)return;
+  el.dataset.contextProfile=p.id;el.classList.add('contextualized');
   el.innerHTML='<strong>現在の学習環境での役割</strong>'+
     '<span class="context-scope-chip common">🟢 Linux共通</span>'+
     '<span class="context-scope-chip env">'+p.chip+' Package管理：'+esc(p.pkg)+'</span>'+
@@ -40,25 +41,29 @@ function rewriteLegend(){
 function rewriteLive(){
   var bar=document.querySelector('.mobile-live-command-scope');if(!bar)return;
   var code=bar.querySelector('code'),cmd=code?(code.textContent||'').replace(/^\$\s*/,''):'';
-  if(!cmd)return;
-  bar.classList.add('contextualized');
+  if(!cmd)return;var sig=profile().id+'|'+cmd;
+  if(bar.dataset.contextSig===sig)return;
+  bar.dataset.contextSig=sig;bar.classList.add('contextualized');
   bar.innerHTML='<div class="mobile-live-command-scope-top"><span class="mobile-live-command-scope-label">この環境では</span>'+chips(cmd)+'</div><code>$ '+esc(cmd)+'</code>';
 }
 function rewriteChoices(root){
   (root||document).querySelectorAll('.mobile-command-choices button').forEach(function(b){
     var code=b.querySelector('code');if(!code)return;
     var old=b.querySelector('.command-scope-badges');if(old)old.style.display='none';
-    var wrap=b.querySelector('.context-scope-badges');if(!wrap){wrap=document.createElement('span');wrap.className='context-scope-badges';b.appendChild(wrap)}
-    wrap.innerHTML=chips(code.textContent);
+    var sig=profile().id+'|'+code.textContent,wrap=b.querySelector('.context-scope-badges');
+    if(!wrap){wrap=document.createElement('span');wrap.className='context-scope-badges';b.appendChild(wrap)}
+    if(wrap.dataset.contextSig===sig)return;wrap.dataset.contextSig=sig;wrap.innerHTML=chips(code.textContent);
   });
   (root||document).querySelectorAll('.incident-command-choice').forEach(function(b){
     var code=b.querySelector('code');if(!code)return;
-    var wrap=b.querySelector('.context-scope-badges');if(!wrap){wrap=document.createElement('span');wrap.className='context-scope-badges';b.appendChild(wrap)}
-    wrap.innerHTML=chips(code.textContent);
+    var sig=profile().id+'|'+code.textContent,wrap=b.querySelector('.context-scope-badges');
+    if(!wrap){wrap=document.createElement('span');wrap.className='context-scope-badges';b.appendChild(wrap)}
+    if(wrap.dataset.contextSig===sig)return;wrap.dataset.contextSig=sig;wrap.innerHTML=chips(code.textContent);
   });
 }
 function apply(root){rewriteLegend();rewriteLive();rewriteChoices(root||document)}
 apply(document);
-new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType===1)rewriteChoices(n)})});apply(document)}).observe(document.body,{subtree:true,childList:true,characterData:true});
+new MutationObserver(function(ms){var touched=false;ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType===1){rewriteChoices(n);touched=true}});if(m.type==='characterData')touched=true});if(touched||ms.length)apply(document)}).observe(document.body,{subtree:true,childList:true,characterData:true});
 window.addEventListener('storage',function(e){if(e.key===KEY)setTimeout(function(){apply(document)},0)});
+document.addEventListener('click',function(){setTimeout(function(){apply(document)},0)},true);
 })();
