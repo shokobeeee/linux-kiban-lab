@@ -145,11 +145,17 @@ jobs:
 
       - name: Verify patched site
         run: |
+          node --check _site/ui-density.js
+          node --check _site/ui-learning.js
+          node --check _site/ui-generic.js
+          node --check _site/ui-incident-modes.js
           grep -q 'Linux基盤ラボ' _site/index.html
           grep -q 'ui-generic.js?v=12' _site/index.html
           grep -q 'ui-incident-modes.css?v=12' _site/parrot_linux_lab12_scheduler.html
           grep -q 'ui-incident-modes.js?v=12' _site/parrot_linux_lab12_scheduler.html
           grep -q 'ui-incident-modes.js?v=12' _site/parrot_linux_lab20_capstone.html
+          grep -q 'id="diagButtons"' _site/parrot_linux_lab12_scheduler.html
+          grep -q 'data-ev="network"' _site/parrot_linux_lab20_capstone.html
           grep -q "12:\[" _site/ui-incident-modes.js
           grep -q "20:\[" _site/ui-incident-modes.js
           grep -q 'Guided' _site/ui-incident-modes.js
