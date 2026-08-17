@@ -96,27 +96,27 @@ jobs:
                   text = text.replace(old, new)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=15">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=15">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=15">'),
-                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=15">'),
-                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=15">'),
-                  ('ui-incident-polish.css', '<link rel="stylesheet" href="./ui-incident-polish.css?v=15">'),
-                  ('ui-distro.css', '<link rel="stylesheet" href="./ui-distro.css?v=15">'),
-                  ('ui-scope-context.css', '<link rel="stylesheet" href="./ui-scope-context.css?v=15">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=16">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=16">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=16">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=16">'),
+                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=16">'),
+                  ('ui-incident-polish.css', '<link rel="stylesheet" href="./ui-incident-polish.css?v=16">'),
+                  ('ui-distro.css', '<link rel="stylesheet" href="./ui-distro.css?v=16">'),
+                  ('ui-scope-context.css', '<link rel="stylesheet" href="./ui-scope-context.css?v=16">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=15"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=16"', text)
 
               scripts = ['ui-density.js','ui-learning.js','ui-generic.js','ui-incident-modes.js','ui-incident-polish.js','ui-distro.js','ui-scope-context.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=15"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=16"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=15"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=16"', text)
 
               page.write_text(text, encoding='utf-8')
 
@@ -148,27 +148,27 @@ jobs:
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v15-contextual-roles', text)
-              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v15-contextual-roles', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v16-layer-guide', text)
+              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v16-layer-guide', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=15",'
-                  '\n  "./ui-live-terminal.css?v=15",'
-                  '\n  "./ui-learning.css?v=15",'
-                  '\n  "./ui-generic.css?v=15",'
-                  '\n  "./ui-incident-modes.css?v=15",'
-                  '\n  "./ui-incident-polish.css?v=15",'
-                  '\n  "./ui-distro.css?v=15",'
-                  '\n  "./ui-scope-context.css?v=15",'
-                  '\n  "./ui-density.js?v=15",'
-                  '\n  "./ui-learning.js?v=15",'
-                  '\n  "./ui-generic.js?v=15",'
-                  '\n  "./ui-incident-modes.js?v=15",'
-                  '\n  "./ui-incident-polish.js?v=15",'
-                  '\n  "./ui-distro.js?v=15",'
-                  '\n  "./ui-scope-context.js?v=15",'
+                  '\n  "./ui-compact.css?v=16",'
+                  '\n  "./ui-live-terminal.css?v=16",'
+                  '\n  "./ui-learning.css?v=16",'
+                  '\n  "./ui-generic.css?v=16",'
+                  '\n  "./ui-incident-modes.css?v=16",'
+                  '\n  "./ui-incident-polish.css?v=16",'
+                  '\n  "./ui-distro.css?v=16",'
+                  '\n  "./ui-scope-context.css?v=16",'
+                  '\n  "./ui-density.js?v=16",'
+                  '\n  "./ui-learning.js?v=16",'
+                  '\n  "./ui-generic.js?v=16",'
+                  '\n  "./ui-incident-modes.js?v=16",'
+                  '\n  "./ui-incident-polish.js?v=16",'
+                  '\n  "./ui-distro.js?v=16",'
+                  '\n  "./ui-scope-context.js?v=16",'
               )
-              if marker in text and './ui-scope-context.js?v=15' not in text:
+              if marker in text and './ui-scope-context.js?v=16' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
@@ -183,12 +183,12 @@ jobs:
           node --check _site/ui-distro.js
           node --check _site/ui-scope-context.js
           grep -q 'Linux基盤ラボ' _site/index.html
-          grep -q 'ui-distro.js?v=15' _site/index.html
-          grep -q 'ui-scope-context.css?v=15' _site/index.html
-          grep -q 'ui-scope-context.js?v=15' _site/parrot_linux_lab01_web_nginx.html
+          grep -q 'ui-distro.js?v=16' _site/index.html
+          grep -q 'ui-scope-context.css?v=16' _site/index.html
+          grep -q 'ui-scope-context.js?v=16' _site/parrot_linux_lab01_web_nginx.html
           grep -q '現在の学習環境での役割' _site/ui-scope-context.js
-          grep -q 'Package管理：' _site/ui-scope-context.js
-          grep -q 'Firewall：' _site/ui-scope-context.js
+          grep -q 'Debian / RHEL と systemd は別レイヤー' _site/ui-scope-context.js
+          grep -q 'Linuxの分類は「同じ軸」ではない' _site/ui-scope-context.js
           grep -q 'Service / Log管理：systemd' _site/ui-scope-context.js
           grep -q 'sudo dnf install' _site/ui-distro.js
           grep -q 'firewall-cmd --permanent --add-port' _site/ui-distro.js
