@@ -80,25 +80,33 @@ jobs:
                   text = text.replace(old, new)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=10">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=10">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=10">'),
-                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=10">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=11">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=11">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=11">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=11">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=10"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=11"', text)
 
               scripts = ['ui-density.js','ui-learning.js','ui-generic.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=10"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=11"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=10"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=11"', text)
 
               page.write_text(text, encoding='utf-8')
+
+          learning = root / 'ui-learning.js'
+          if learning.exists():
+              text = learning.read_text(encoding='utf-8')
+              text = text.replace('parrot.local', 'server01.lab.test')
+              text = text.replace('learner@parrot', 'learner@server01')
+              text = text.replace('root@parrot', 'root@server01')
+              learning.write_text(text, encoding='utf-8')
 
           manifest = root / 'manifest.webmanifest'
           if manifest.exists():
@@ -111,19 +119,19 @@ jobs:
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v10-layout-fix', text)
-              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v10-layout-fix', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v11-command-scope', text)
+              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v11-command-scope', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=10",'
-                  '\n  "./ui-live-terminal.css?v=10",'
-                  '\n  "./ui-learning.css?v=10",'
-                  '\n  "./ui-generic.css?v=10",'
-                  '\n  "./ui-density.js?v=10",'
-                  '\n  "./ui-learning.js?v=10",'
-                  '\n  "./ui-generic.js?v=10",'
+                  '\n  "./ui-compact.css?v=11",'
+                  '\n  "./ui-live-terminal.css?v=11",'
+                  '\n  "./ui-learning.css?v=11",'
+                  '\n  "./ui-generic.css?v=11",'
+                  '\n  "./ui-density.js?v=11",'
+                  '\n  "./ui-learning.js?v=11",'
+                  '\n  "./ui-generic.js?v=11",'
               )
-              if marker in text and './ui-generic.js?v=10' not in text:
+              if marker in text and './ui-generic.js?v=11' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
@@ -131,16 +139,17 @@ jobs:
       - name: Verify patched site
         run: |
           grep -q 'Linux基盤ラボ' _site/index.html
-          grep -q 'ui-generic.css?v=10' _site/index.html
-          grep -q 'ui-generic.js?v=10' _site/index.html
-          grep -q 'ui-density.js?v=10' _site/index.html
+          grep -q 'ui-generic.css?v=11' _site/index.html
+          grep -q 'ui-generic.js?v=11' _site/index.html
+          grep -q 'ui-density.js?v=11' _site/index.html
+          grep -q 'mobile-live-command-scope' _site/ui-generic.js
+          grep -q 'Linux / Unixで広く利用' _site/ui-generic.js
+          grep -q 'nginx固有' _site/ui-generic.js
+          grep -q 'server01.lab.test' _site/ui-learning.js
+          ! grep -q 'parrot.local' _site/ui-learning.js
           grep -q 'genericizeTree' _site/ui-generic.js
           grep -q 'syncSliderHeight' _site/ui-density.js
-          grep -q 'overflow-y:hidden' _site/ui-live-terminal.css
-          grep -q 'min-height:0' _site/ui-live-terminal.css
           grep -q 'var LABS=' _site/ui-learning.js
-          grep -q 'linux-scope-legend' _site/ui-generic.js
-          grep -q 'Debian / Ubuntu' _site/ui-generic.js
           grep -q '"name": "Linux基盤ラボ"' _site/manifest.webmanifest
           ! grep -R -Eq 'Parrot OS|parrot\.local|learner@parrot|root@parrot' _site/*.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
