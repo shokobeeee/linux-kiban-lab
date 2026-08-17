@@ -36,37 +36,50 @@ jobs:
           tar -xJf site.tar.xz -C _site
           test -f _site/index.html
 
-      - name: Apply compact mobile UI
+      - name: Apply full-width swipe mobile UI
         run: |
           cp ui-compact.css _site/ui-compact.css
           cp ui-density.js _site/ui-density.js
           python - <<'PY'
           from pathlib import Path
+          import re
 
           root = Path('_site')
           for page in root.glob('*.html'):
               text = page.read_text(encoding='utf-8')
+              # Remove the original 80% page zoom. Mobile density is now achieved
+              # through spacing/font sizing, never by shrinking the canvas.
+              text = re.sub(r'\bzoom\s*:\s*(?:0?\.8|80%)\s*;?', '', text)
+
               if 'ui-compact.css' not in text:
-                  text = text.replace('</head>', '  <link rel="stylesheet" href="./ui-compact.css">\n</head>', 1)
+                  text = text.replace('</head>', '  <link rel="stylesheet" href="./ui-compact.css?v=5">\n</head>', 1)
+              else:
+                  text = re.sub(r'href="\./ui-compact\.css(?:\?v=\d+)?"', 'href="./ui-compact.css?v=5"', text)
+
               if 'ui-density.js' not in text:
-                  text = text.replace('</body>', '  <script src="./ui-density.js"></script>\n</body>', 1)
+                  text = text.replace('</body>', '  <script src="./ui-density.js?v=5"></script>\n</body>', 1)
+              else:
+                  text = re.sub(r'src="\./ui-density\.js(?:\?v=\d+)?"', 'src="./ui-density.js?v=5"', text)
               page.write_text(text, encoding='utf-8')
 
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = text.replace('parrot-linux-labs-v1', 'parrot-linux-labs-v4-width-fix')
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'parrot-linux-labs-v5-slider', text)
               marker = 'const ASSETS = ['
-              if marker in text and './ui-compact.css' not in text:
-                  text = text.replace(marker, marker + '\n  "./ui-compact.css",\n  "./ui-density.js",', 1)
+              if marker in text and './ui-compact.css?v=5' not in text:
+                  text = text.replace(marker, marker + '\n  "./ui-compact.css?v=5",\n  "./ui-density.js?v=5",', 1)
               sw.write_text(text, encoding='utf-8')
           PY
 
       - name: Verify patched site
         run: |
-          grep -q 'ui-compact.css' _site/index.html
-          grep -q 'ui-density.js' _site/index.html
-          grep -q '100vw - 12px' _site/ui-compact.css
+          grep -q 'ui-compact.css?v=5' _site/index.html
+          grep -q 'ui-density.js?v=5' _site/index.html
+          grep -q 'mobile-operation-slider' _site/ui-density.js
+          grep -q 'mobile-structure-scroller' _site/ui-compact.css
+          ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
+          ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab02_firewall_complete.html
           test -f _site/ui-compact.css
           test -f _site/ui-density.js
 
