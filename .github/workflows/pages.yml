@@ -14,6 +14,8 @@ on:
       - ui-generic.js
       - ui-incident-modes.css
       - ui-incident-modes.js
+      - ui-incident-polish.css
+      - ui-incident-polish.js
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -54,6 +56,8 @@ jobs:
           cp ui-generic.js _site/ui-generic.js
           cp ui-incident-modes.css _site/ui-incident-modes.css
           cp ui-incident-modes.js _site/ui-incident-modes.js
+          cp ui-incident-polish.css _site/ui-incident-polish.css
+          cp ui-incident-polish.js _site/ui-incident-polish.js
           python - <<'PY'
           from pathlib import Path
           import re, json
@@ -84,24 +88,25 @@ jobs:
                   text = text.replace(old, new)
 
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=12">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=12">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=12">'),
-                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=12">'),
-                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=12">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=13">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=13">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=13">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=13">'),
+                  ('ui-incident-modes.css', '<link rel="stylesheet" href="./ui-incident-modes.css?v=13">'),
+                  ('ui-incident-polish.css', '<link rel="stylesheet" href="./ui-incident-polish.css?v=13">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=12"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=13"', text)
 
-              scripts = ['ui-density.js','ui-learning.js','ui-generic.js','ui-incident-modes.js']
+              scripts = ['ui-density.js','ui-learning.js','ui-generic.js','ui-incident-modes.js','ui-incident-polish.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=12"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=13"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=12"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=13"', text)
 
               page.write_text(text, encoding='utf-8')
 
@@ -112,6 +117,15 @@ jobs:
               text = text.replace('learner@parrot', 'learner@server01')
               text = text.replace('root@parrot', 'root@server01')
               learning.write_text(text, encoding='utf-8')
+
+          for name in ('README.txt', 'README_MOBILE.txt'):
+              p = root / name
+              if p.exists():
+                  text = p.read_text(encoding='utf-8')
+                  text = text.replace('Parrot OS Linux基盤ラボ', 'Linux基盤ラボ')
+                  text = text.replace('Parrot OS', 'Linux')
+                  text = text.replace('Parrot', 'Linux')
+                  p.write_text(text, encoding='utf-8')
 
           manifest = root / 'manifest.webmanifest'
           if manifest.exists():
@@ -124,21 +138,23 @@ jobs:
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v12-incident-modes', text)
-              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v12-incident-modes', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v13-evidence-first', text)
+              text = re.sub(r'linux-kiban-lab-v[^\'\"]*', 'linux-kiban-lab-v13-evidence-first', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=12",'
-                  '\n  "./ui-live-terminal.css?v=12",'
-                  '\n  "./ui-learning.css?v=12",'
-                  '\n  "./ui-generic.css?v=12",'
-                  '\n  "./ui-incident-modes.css?v=12",'
-                  '\n  "./ui-density.js?v=12",'
-                  '\n  "./ui-learning.js?v=12",'
-                  '\n  "./ui-generic.js?v=12",'
-                  '\n  "./ui-incident-modes.js?v=12",'
+                  '\n  "./ui-compact.css?v=13",'
+                  '\n  "./ui-live-terminal.css?v=13",'
+                  '\n  "./ui-learning.css?v=13",'
+                  '\n  "./ui-generic.css?v=13",'
+                  '\n  "./ui-incident-modes.css?v=13",'
+                  '\n  "./ui-incident-polish.css?v=13",'
+                  '\n  "./ui-density.js?v=13",'
+                  '\n  "./ui-learning.js?v=13",'
+                  '\n  "./ui-generic.js?v=13",'
+                  '\n  "./ui-incident-modes.js?v=13",'
+                  '\n  "./ui-incident-polish.js?v=13",'
               )
-              if marker in text and './ui-incident-modes.js?v=12' not in text:
+              if marker in text and './ui-incident-polish.js?v=13' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
@@ -149,28 +165,31 @@ jobs:
           node --check _site/ui-learning.js
           node --check _site/ui-generic.js
           node --check _site/ui-incident-modes.js
+          node --check _site/ui-incident-polish.js
           grep -q 'Linux基盤ラボ' _site/index.html
-          grep -q 'ui-generic.js?v=12' _site/index.html
-          grep -q 'ui-incident-modes.css?v=12' _site/parrot_linux_lab12_scheduler.html
-          grep -q 'ui-incident-modes.js?v=12' _site/parrot_linux_lab12_scheduler.html
-          grep -q 'ui-incident-modes.js?v=12' _site/parrot_linux_lab20_capstone.html
-          grep -q 'id="diagButtons"' _site/parrot_linux_lab12_scheduler.html
-          grep -q 'data-ev="network"' _site/parrot_linux_lab20_capstone.html
-          grep -q "12:\[" _site/ui-incident-modes.js
-          grep -q "20:\[" _site/ui-incident-modes.js
+          grep -q 'ui-generic.js?v=13' _site/index.html
+          grep -q 'ui-incident-modes.js?v=13' _site/parrot_linux_lab12_scheduler.html
+          grep -q 'ui-incident-polish.js?v=13' _site/parrot_linux_lab12_scheduler.html
+          grep -q 'ui-incident-polish.js?v=13' _site/parrot_linux_lab20_capstone.html
+          grep -q 'minEvidence=lab===20?3:2' _site/ui-incident-polish.js
+          grep -q 'incident-evidence-gate' _site/ui-incident-polish.js
+          grep -q 'Cloud Security Groupとは別レイヤー' _site/ui-incident-polish.js
+          grep -q 'crontab -l' _site/ui-incident-polish.js
+          grep -q 'incident-answer-locked' _site/ui-incident-polish.css
           grep -q 'Guided' _site/ui-incident-modes.js
           grep -q 'Standard' _site/ui-incident-modes.js
           grep -q 'Engineer' _site/ui-incident-modes.js
-          grep -q 'incident-mode-box' _site/ui-incident-modes.css
           grep -q 'mobile-live-command-scope' _site/ui-generic.js
           grep -q 'server01.lab.test' _site/ui-learning.js
           ! grep -q 'parrot.local' _site/ui-learning.js
           grep -q '"name": "Linux基盤ラボ"' _site/manifest.webmanifest
+          ! grep -Eq 'Parrot OS|Parrot' _site/README.txt
+          ! grep -Eq 'Parrot OS|Parrot' _site/README_MOBILE.txt
           ! grep -R -Eq 'Parrot OS|parrot\.local|learner@parrot|root@parrot' _site/*.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab20_capstone.html
-          test -f _site/ui-incident-modes.css
-          test -f _site/ui-incident-modes.js
+          test -f _site/ui-incident-polish.css
+          test -f _site/ui-incident-polish.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
