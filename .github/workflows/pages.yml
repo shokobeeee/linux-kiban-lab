@@ -10,6 +10,8 @@ on:
       - ui-density.js
       - ui-learning.css
       - ui-learning.js
+      - ui-generic.css
+      - ui-generic.js
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -39,73 +41,103 @@ jobs:
           tar -xJf site.tar.xz -C _site
           test -f _site/index.html
 
-      - name: Apply mobile learning UI
+      - name: Apply generic Linux learning UI
         run: |
           cp ui-compact.css _site/ui-compact.css
           cp ui-live-terminal.css _site/ui-live-terminal.css
           cp ui-density.js _site/ui-density.js
           cp ui-learning.css _site/ui-learning.css
           cp ui-learning.js _site/ui-learning.js
+          cp ui-generic.css _site/ui-generic.css
+          cp ui-generic.js _site/ui-generic.js
           python - <<'PY'
           from pathlib import Path
-          import re
+          import re, json
 
           root = Path('_site')
           for page in root.glob('*.html'):
               text = page.read_text(encoding='utf-8')
               text = re.sub(r'\bzoom\s*:\s*(?:0?\.8|80%)\s*;?', '', text)
 
+              # Genericize the teaching environment without changing legacy filenames/links.
+              replacements = [
+                  ('Parrot OS Linux基盤ラボ', 'Linux基盤ラボ'),
+                  ('Parrot OS Linux 基盤ラボ', 'Linux基盤ラボ'),
+                  ('Parrot OSもDebian系なので、ソフトの追加・更新に apt を使えます。', 'このラボではDebian/Ubuntu系を例に、ソフトの追加・更新へ apt を使います。'),
+                  ('Parrot OS自体は動いているのに', 'Linuxホスト自体は動いているのに'),
+                  ('Parrot OS自身', 'このLinuxホスト自身'),
+                  ('Parrot GNU/Linux', 'Linux'),
+                  ('Parrot with Linux ', 'Linux with kernel '),
+                  ('Parrot → localhost', 'Linux Host → localhost'),
+                  ('Parrot → Internet', 'Linux Host → Internet'),
+                  ('parrot.local', 'server01.lab.test'),
+                  ('learner@parrot', 'learner@server01'),
+                  ('root@parrot', 'root@server01'),
+                  (' / parrot', ' / server01'),
+                  ('Parrot OS', 'Linux'),
+                  ('Parrot', 'Linux'),
+              ]
+              for old, new in replacements:
+                  text = text.replace(old, new)
+
               assets = [
-                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=8">'),
-                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=8">'),
-                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=8">'),
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=9">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=9">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=9">'),
+                  ('ui-generic.css', '<link rel="stylesheet" href="./ui-generic.css?v=9">'),
               ]
               for name, tag in assets:
                   if name not in text:
                       text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
                   else:
-                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=8"', text)
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=9"', text)
 
-              scripts = ['ui-density.js','ui-learning.js']
+              scripts = ['ui-density.js','ui-learning.js','ui-generic.js']
               for name in scripts:
                   if name not in text:
-                      text = text.replace('</body>', '  <script src="./'+name+'?v=8"></script>\n</body>', 1)
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=9"></script>\n</body>', 1)
                   else:
-                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=8"', text)
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=9"', text)
 
               page.write_text(text, encoding='utf-8')
+
+          manifest = root / 'manifest.webmanifest'
+          if manifest.exists():
+              data = json.loads(manifest.read_text(encoding='utf-8'))
+              data['name'] = 'Linux基盤ラボ'
+              data['short_name'] = 'Linux Lab'
+              data['description'] = 'Linuxコマンド・インフラ構造・障害切り分けを体験的に学ぶシミュレーター'
+              manifest.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'parrot-linux-labs-v8-learning-rollout', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'linux-kiban-lab-v9-generic', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=8",'
-                  '\n  "./ui-live-terminal.css?v=8",'
-                  '\n  "./ui-learning.css?v=8",'
-                  '\n  "./ui-density.js?v=8",'
-                  '\n  "./ui-learning.js?v=8",'
+                  '\n  "./ui-compact.css?v=9",'
+                  '\n  "./ui-live-terminal.css?v=9",'
+                  '\n  "./ui-learning.css?v=9",'
+                  '\n  "./ui-generic.css?v=9",'
+                  '\n  "./ui-density.js?v=9",'
+                  '\n  "./ui-learning.js?v=9",'
+                  '\n  "./ui-generic.js?v=9",'
               )
-              if marker in text and './ui-learning.js?v=8' not in text:
+              if marker in text and './ui-generic.js?v=9' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
 
       - name: Verify patched site
         run: |
-          grep -q 'ui-compact.css?v=8' _site/index.html
-          grep -q 'ui-live-terminal.css?v=8' _site/index.html
-          grep -q 'ui-learning.css?v=8' _site/index.html
-          grep -q 'ui-density.js?v=8' _site/index.html
-          grep -q 'ui-learning.js?v=8' _site/index.html
-          grep -q 'mobile-live-terminal' _site/ui-density.js
-          grep -q 'mobile-operation-slider' _site/ui-density.js
+          grep -q 'Linux基盤ラボ' _site/index.html
+          grep -q 'ui-generic.css?v=9' _site/index.html
+          grep -q 'ui-generic.js?v=9' _site/index.html
           grep -q 'var LABS=' _site/ui-learning.js
-          grep -q 'allow80:E' _site/ui-learning.js
-          grep -q 'psgrep:E' _site/ui-learning.js
-          grep -q 'protocol-legend' _site/ui-learning.js
-          grep -q 'protocol-legend-grid' _site/ui-learning.css
+          grep -q 'linux-scope-legend' _site/ui-generic.js
+          grep -q 'Debian / Ubuntu' _site/ui-generic.js
+          grep -q '"name": "Linux基盤ラボ"' _site/manifest.webmanifest
+          ! grep -R -Eq 'Parrot OS|parrot\.local|learner@parrot|root@parrot' _site/*.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab11_bash_pipes.html
           test -f _site/ui-compact.css
@@ -113,6 +145,8 @@ jobs:
           test -f _site/ui-density.js
           test -f _site/ui-learning.css
           test -f _site/ui-learning.js
+          test -f _site/ui-generic.css
+          test -f _site/ui-generic.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
