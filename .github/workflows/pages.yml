@@ -8,6 +8,8 @@ on:
       - ui-compact.css
       - ui-live-terminal.css
       - ui-density.js
+      - ui-learning.css
+      - ui-learning.js
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -37,11 +39,13 @@ jobs:
           tar -xJf site.tar.xz -C _site
           test -f _site/index.html
 
-      - name: Apply full-width swipe mobile UI
+      - name: Apply mobile learning UI
         run: |
           cp ui-compact.css _site/ui-compact.css
           cp ui-live-terminal.css _site/ui-live-terminal.css
           cp ui-density.js _site/ui-density.js
+          cp ui-learning.css _site/ui-learning.css
+          cp ui-learning.js _site/ui-learning.js
           python - <<'PY'
           from pathlib import Path
           import re
@@ -49,55 +53,63 @@ jobs:
           root = Path('_site')
           for page in root.glob('*.html'):
               text = page.read_text(encoding='utf-8')
-
               text = re.sub(r'\bzoom\s*:\s*(?:0?\.8|80%)\s*;?', '', text)
 
-              if 'ui-compact.css' not in text:
-                  text = text.replace('</head>', '  <link rel="stylesheet" href="./ui-compact.css?v=6">\n</head>', 1)
-              else:
-                  text = re.sub(r'href="\./ui-compact\.css(?:\?v=\d+)?"', 'href="./ui-compact.css?v=6"', text)
+              assets = [
+                  ('ui-compact.css', '<link rel="stylesheet" href="./ui-compact.css?v=7">'),
+                  ('ui-live-terminal.css', '<link rel="stylesheet" href="./ui-live-terminal.css?v=7">'),
+                  ('ui-learning.css', '<link rel="stylesheet" href="./ui-learning.css?v=7">'),
+              ]
+              for name, tag in assets:
+                  if name not in text:
+                      text = text.replace('</head>', '  ' + tag + '\n</head>', 1)
+                  else:
+                      text = re.sub(r'href="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'href="./'+name+'?v=7"', text)
 
-              if 'ui-live-terminal.css' not in text:
-                  text = text.replace('</head>', '  <link rel="stylesheet" href="./ui-live-terminal.css?v=6">\n</head>', 1)
-              else:
-                  text = re.sub(r'href="\./ui-live-terminal\.css(?:\?v=\d+)?"', 'href="./ui-live-terminal.css?v=6"', text)
-
-              if 'ui-density.js' not in text:
-                  text = text.replace('</body>', '  <script src="./ui-density.js?v=6"></script>\n</body>', 1)
-              else:
-                  text = re.sub(r'src="\./ui-density\.js(?:\?v=\d+)?"', 'src="./ui-density.js?v=6"', text)
+              scripts = ['ui-density.js','ui-learning.js']
+              for name in scripts:
+                  if name not in text:
+                      text = text.replace('</body>', '  <script src="./'+name+'?v=7"></script>\n</body>', 1)
+                  else:
+                      text = re.sub(r'src="\./'+re.escape(name)+r'(?:\?v=\d+)?"', 'src="./'+name+'?v=7"', text)
 
               page.write_text(text, encoding='utf-8')
 
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'parrot-linux-labs-v6-live-terminal', text)
+              text = re.sub(r'parrot-linux-labs-v[^\'\"]*', 'parrot-linux-labs-v7-learning-modes', text)
               marker = 'const ASSETS = ['
               additions = (
-                  '\n  "./ui-compact.css?v=6",'
-                  '\n  "./ui-live-terminal.css?v=6",'
-                  '\n  "./ui-density.js?v=6",'
+                  '\n  "./ui-compact.css?v=7",'
+                  '\n  "./ui-live-terminal.css?v=7",'
+                  '\n  "./ui-learning.css?v=7",'
+                  '\n  "./ui-density.js?v=7",'
+                  '\n  "./ui-learning.js?v=7",'
               )
-              if marker in text and './ui-live-terminal.css?v=6' not in text:
+              if marker in text and './ui-learning.js?v=7' not in text:
                   text = text.replace(marker, marker + additions, 1)
               sw.write_text(text, encoding='utf-8')
           PY
 
       - name: Verify patched site
         run: |
-          grep -q 'ui-compact.css?v=6' _site/index.html
-          grep -q 'ui-live-terminal.css?v=6' _site/index.html
-          grep -q 'ui-density.js?v=6' _site/index.html
+          grep -q 'ui-compact.css?v=7' _site/index.html
+          grep -q 'ui-live-terminal.css?v=7' _site/index.html
+          grep -q 'ui-learning.css?v=7' _site/index.html
+          grep -q 'ui-density.js?v=7' _site/index.html
+          grep -q 'ui-learning.js?v=7' _site/index.html
           grep -q 'mobile-live-terminal' _site/ui-density.js
-          grep -q 'mobile-live-terminal-body' _site/ui-live-terminal.css
           grep -q 'mobile-operation-slider' _site/ui-density.js
-          grep -q 'mobile-structure-scroller' _site/ui-compact.css
+          grep -q 'mobile-learning-mode' _site/ui-learning.js
+          grep -q 'mobile-learning-mode-buttons' _site/ui-learning.css
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab01_web_nginx.html
           ! grep -Eq 'zoom[[:space:]]*:[[:space:]]*(0?\.8|80%)' _site/parrot_linux_lab02_firewall_complete.html
           test -f _site/ui-compact.css
           test -f _site/ui-live-terminal.css
           test -f _site/ui-density.js
+          test -f _site/ui-learning.css
+          test -f _site/ui-learning.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
