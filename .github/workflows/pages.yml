@@ -52,11 +52,10 @@ jobs:
                   text = text.replace('</body>', '  <script src="./ui-density.js"></script>\n</body>', 1)
               page.write_text(text, encoding='utf-8')
 
-          # Force clients off the previous cache and include the new UI assets.
           sw = root / 'sw.js'
           if sw.exists():
               text = sw.read_text(encoding='utf-8')
-              text = text.replace('parrot-linux-labs-v1', 'parrot-linux-labs-v3-compact')
+              text = text.replace('parrot-linux-labs-v1', 'parrot-linux-labs-v4-width-fix')
               marker = 'const ASSETS = ['
               if marker in text and './ui-compact.css' not in text:
                   text = text.replace(marker, marker + '\n  "./ui-compact.css",\n  "./ui-density.js",', 1)
@@ -67,6 +66,7 @@ jobs:
         run: |
           grep -q 'ui-compact.css' _site/index.html
           grep -q 'ui-density.js' _site/index.html
+          grep -q '100vw - 12px' _site/ui-compact.css
           test -f _site/ui-compact.css
           test -f _site/ui-density.js
 
